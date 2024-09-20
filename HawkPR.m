@@ -63,7 +63,7 @@ n_mobitype = size(mob_val,1)/n_cty;
 disp(['There ' num2str(n_cty) ' counties, ' num2str(n_mobitype) ' types of Mobility indices, and ' num2str(n_day) ' days in the convid reports.' ])
 
 % Train & Test Split
-n_tr = size(covid,2);
+n_tr = size(covid,2) -DaysPred;
 mob_tr = mob_val(:, 1:n_tr);
 mob_te = mob_val(:, n_tr+1:n_tr+DaysPred);
 
@@ -76,7 +76,7 @@ Demo_val_in = Demo_val;
 Demo_val_tr = repmat(Demo_val_in, n_tr,1);
 Demo_val_te = repmat(Demo_val_in, DaysPred,1);
 
-covid_tr = covid;
+covid_tr = covid(:, 1:end-DaysPred);
 %
 Covar_tr = [mob_tr_reshape Demo_val_tr];
 Covar_te = [mob_te_reshape Demo_val_te];
