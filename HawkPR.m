@@ -19,7 +19,7 @@ else
 	mobiShift_in = Delta;
 end
 
-DaySnip=100;
+DaySnip=106;
 CountySnip=20;
 
 % Read-in COVID data
@@ -30,10 +30,10 @@ Mobi = readtable( InputPath_mobility,'ReadVariableNames',true);
 
 % Read-in demographic
 Demo = readtable(InputPath_demography,'ReadVariableNames',true);
-Demo_val = table2array( Demo(1:CountySnip,4:end));
+Demo_val = table2array(Demo(1:CountySnip,4:end));
 
 % Data pre-processing
-covid = table2array( NYT(1:CountySnip,4:4+DaySnip));
+covid = table2array( NYT(1:CountySnip,4:3+DaySnip));
 covid(isnan(covid)) = 0;
 covid = [zeros(size(covid,1), 1 ) covid(:,2:end) - covid(:,1:end-1)];
 covid(covid<=0) = 0;
@@ -41,7 +41,7 @@ covid(covid<=0) = 0;
 
 % Pad to shift 
 mob_head = Mobi(1:6*CountySnip,1:4);
-mob_val = table2array(Mobi(1:6*CountySnip,5:5+DaySnip));
+mob_val = table2array(Mobi(1:6*CountySnip,5:4+DaySnip));
 
 for pad = 1:mobiShift_in
     mob_val = [ mean(mob_val(:,1:7),2) mob_val ];
@@ -49,14 +49,14 @@ end
 
 % Get Key and Date
 
-NYT_Date_list = NYT.Properties.VariableNames(4:4+DaySnip);
+NYT_Date_list = NYT.Properties.VariableNames(4:3+DaySnip);
 NYT_Key_list = table2cell(NYT(1:CountySnip,1:3));
 
 Mobi_Type_list = table2cell(Mobi(1:6,4));
-Mobi_Date_list = Mobi.Properties.VariableNames(5:5+DaySnip);
+Mobi_Date_list = Mobi.Properties.VariableNames(5:4+DaySnip);
 Mobi_Key_list = table2cell(Mobi(1:6:6*CountySnip,1:3));
 
-Demo_Type_list = Demo.Properties.VariableNames(4:4+DaySnip);
+Demo_Type_list = Demo.Properties.VariableNames(4:end);
 Demo_Key_list  = table2cell(Demo(1:CountySnip,1));
 
 % Get number of counties and number of days
@@ -66,7 +66,7 @@ n_mobitype = size(mob_val,1)/n_cty;
 disp(['There ' num2str(n_cty) ' counties, ' num2str(n_mobitype) ' types of Mobility indices, and ' num2str(n_day) ' days in the convid reports.' ])
 
 % Train & Test Split
-n_tr = size(covid,2) -DaysPred;
+n_tr = size(covid,2) - DaysPred;
 mob_tr = mob_val(:, 1:n_tr);
 mob_te = mob_val(:, n_tr+1:n_tr+DaysPred);
 
@@ -104,7 +104,7 @@ end
 
 
 %% Define Parameters
-n_day_tr = n_day;
+n_day_tr = n_tr;
 T = n_day_tr;
 % Boundary correction, the number of days before the total number of days (n_day)
 dry_correct = 14;
