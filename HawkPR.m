@@ -195,6 +195,10 @@ for itr = 1:emiter
     freqs = covid_tr(:, 1:day_for_tr);
     freqs = reshape(freqs, prod(size(freqs)), 1);
 
+    glm_y = full(glm_y); 
+    glm_tr = full(glm_tr);     
+    freqs = full(freqs);         
+
     mdl = fitglm( glm_tr, glm_y,'linear', 'Distribution', 'poisson', 'options', opts, 'VarNames', VarNames, 'Weights', freqs);
     disp(mdl)
     %% Estimate K0
