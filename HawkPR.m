@@ -297,7 +297,7 @@ end
 if(itr == emiter)
     disp(['Reach maximun EM iteration.'])
 end
-%save(OutputPath_mdl,'mus','alpha','beta','K0','mdl','VarNames','alpha_delta','beta_delta','mus_delta','K0_delta','theta_delta')
+save(OutputPath_mdl,'mus','alpha','beta','K0','mdl','VarNames','alpha_delta','beta_delta','mus_delta','K0_delta','theta_delta')
 
 % Start Simulation
 load(OutputPath_mdl, 'mus','alpha','beta','K0','mdl','VarNames','alpha_delta','beta_delta','mus_delta','K0_delta','theta_delta')
@@ -384,14 +384,14 @@ sim_mean = mean(sim_out,3);
 
 
 % Get header 
-Date_pred = datetime(datestr( replace(NYT_Date_list(end),'x','') ,'mm/dd/yyyy'))+days(1:DaysPred);
-Date_pred = replace(string( datestr(Date_pred,'xyyyy/mm/dd')), '/' ,'_');
+%Date_pred = datetime(datestr( replace(NYT_Date_list(end),'x','') ,'mm/dd/yyyy'))+days(1:DaysPred);
+%Date_pred = replace(string( datestr(Date_pred,'xyyyy/mm/dd')), '/' ,'_');
 
-table_out  = array2table(sim_mean);
-table_out.Properties.VariableNames = Date_pred;
-table_out = [NYT(:,1:3) table_out];
+%table_out  = array2table(sim_mean);
+%table_out.Properties.VariableNames = Date_pred;
+%table_out = [NYT(:,1:3) table_out];
 
-writetable(table_out,OutputPath_pred)
+%writetable(table_out,OutputPath_pred)
 end
 
 function [covid_tr_ext_j] = covid_tr_ext_j(covid_tr, n_day_tr)
