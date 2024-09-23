@@ -382,6 +382,30 @@ sim_out = sim(:,end-DaysPred+1:end,:);
 % Formate the output 
 sim_mean = mean(sim_out,3);
 
+%% PLOT
+
+og_cases = sum(covid(:, 1:end-DaysPred), 1); % Original cases
+compare_cases = sum(covid(:, end-DaysPred+1:end), 1); % Comparison cases (green)
+pred_cases = sum(sim_mean, 1); % Predicted cases (red)
+
+% fix dates
+NYT_Date_list_clean = strrep(NYT_Date_list, '_', '-'); 
+NYT_Date_list_clean = cellfun(@(x) x(2:end), NYT_Date_list_clean, 'UniformOutput', false);
+dates_og_cases = datetime(NYT_Date_list_clean(1:end-DaysPred), 'InputFormat', 'yyyy-MM-dd');
+dates_pred_cases = datetime(NYT_Date_list_clean(end-DaysPred+1:end), 'InputFormat', 'yyyy-MM-dd');
+
+figure;
+hold on;
+plot(dates_og_cases, og_cases, 'b', 'LineWidth', 1.5); 
+plot(dates_pred_cases, compare_cases, 'g', 'LineWidth', 1.5); 
+plot(dates_pred_cases, pred_cases, 'r', 'LineWidth', 1.5); 
+xlabel('Date');
+ylabel('Case Counts');
+title('COVID-19 Case Count: Actual vs Predicted');
+legend('Original Cases', 'Comparison Cases (Actual)', 'Predicted Cases', 'Location', 'best');
+datetick('x', 'mm/dd', 'keepticks');
+grid on;
+hold off;
 
 % Get header 
 %Date_pred = datetime(datestr( replace(NYT_Date_list(end),'x','') ,'mm/dd/yyyy'))+days(1:DaysPred);
