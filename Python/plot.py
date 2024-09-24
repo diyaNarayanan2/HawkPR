@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import datetime as datetime
 from scipy.interpolate import RegularGridInterpolator
 
 def covid_tr_ext_j(covid_tr, n_day_tr):
@@ -113,8 +112,8 @@ def plot_covid_predictions(DaysPred, n_day_tr, covid_og, pred_cases, dates_list 
     plt.figure(figsize=(10, 6))
     
     # Plot the original daily cases used for training
-    Date_List = [datetime.strptime(date_str[1:].replace('_', '-'), '%Y-%m-%d') for date_str in dates_list]
-    plt.plot(Date_List[:n_day_tr], daily_cases[:n_day_tr], label="True Cases", color="blue")
+    
+    plt.plot(dates_list[:n_day_tr], daily_cases[:n_day_tr], label="True Cases", color="blue")
     
     # If compare is True, highlight the last DaysPred days and plot predicted cases
     if compare:

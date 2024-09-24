@@ -12,6 +12,7 @@ from scipy.sparse import csc_matrix, eye
 import statsmodels.api as sm
 from statsmodels.genmod.families import Poisson
 from sklearn.linear_model import PoissonRegressor
+from datetime import datetime
 #from sklearn.preprocessing import MinMaxScaler
 from plot import snipDataset, plot2dFunc, plot_covid_predictions, covid_tr_ext_i, covid_tr_ext_j
 from sim import HawkSim
@@ -44,6 +45,7 @@ def HawkPR(InputPath_report, InputPath_mobility, InputPath_demography, Crop, Del
     covid, NYT_Key_list, NYT_Date_list = snipDataset(InputPath_report, DaySnip, CountySnip=CtySnip, rowheaders=3)
     covid = np.hstack([np.zeros((covid.shape[0], 1)), np.diff(covid, axis=1)])
     covid[covid <= 0] = 0
+    NYT_Date_list = [datetime.strptime(date_str[1:].replace('_', '-'), '%Y-%m-%d') for date_str in NYT_Date_list]
 
     # Read-in mobility,
     '''Here County Snip should be 6x of report'''
@@ -228,7 +230,6 @@ def HawkPR(InputPath_report, InputPath_mobility, InputPath_demography, Crop, Del
 
         # Bound K0
         K0 = scipy.signal.savgol_filter(K0, window_length=10, polyorder=2, axis=1)
-        #plot2dFunc(kernel=mus, timeList=NYT_Date_list, countyList=NYT_Key_list.iloc[2,:])
         K0_ext_j = np.repeat(K0, n_day_tr, axis=0)
 
         # M-step Part 3)
@@ -370,7 +371,9 @@ def HawkPR(InputPath_report, InputPath_mobility, InputPath_demography, Crop, Del
     fK0 = ypred.reshape(n_cty, n_day)
     # Make fK0 stable
     fK0[fK0 > 4] = 4
-    
+    fK0[fK0 < 0] = 0
+    plot2dFunc(kernel=fK0, timeList=NYT_Date_list, countyList=NYT_Key_list.iloc[2,:])
+        
     #mu_pred = result_mu.predict(sm.add_constant(Covar_all))
     #fmu = mu_pred.reshape(n_cty, n_day)
     # fmu = np.exp(fmu)
@@ -385,4 +388,4 @@ def HawkPR(InputPath_report, InputPath_mobility, InputPath_demography, Crop, Del
     sim_pred = sim_out[:, -DaysPred:]
     pred_cases = np.sum(sim_pred , axis=0)   
     
-    plot_covid_predictions(DaysPred, n_day_tr, covid, pred_cases, DatesList=NYT_Date_list, compare=True)
+    plot_covid_predictions(DaysPred, n_day_tr, covid, pred_cases, dates_list=NYT_Date_list, compare=True)

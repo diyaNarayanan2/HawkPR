@@ -1,4 +1,4 @@
-from Python.HawkPR import HawkPR
+from HawkPR import HawkPR
 
 Alpha =0
 Beta =0
