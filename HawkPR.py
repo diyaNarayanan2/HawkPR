@@ -1,5 +1,3 @@
-%pip install statsmodels
-
 import numpy as np
 import pandas as pd
 import warnings
@@ -362,7 +360,7 @@ def HawkPR(InputPath_report, InputPath_mobility, InputPath_demography, Delta, Al
 
         # Bound K0
         K0 = scipy.signal.savgol_filter(K0, window_length=10, polyorder=2, axis=1)
-        plot2dFunc(kernel=mus, timeList=NYT_Date_list, countyList=NYT_Key_list.iloc[2,:])
+        #plot2dFunc(kernel=mus, timeList=NYT_Date_list, countyList=NYT_Key_list.iloc[2,:])
         K0_ext_j = np.repeat(K0, n_day_tr, axis=0)
 
         # M-step Part 3)
@@ -385,11 +383,12 @@ def HawkPR(InputPath_report, InputPath_mobility, InputPath_demography, Delta, Al
         #p_c(i,i) = μ_c 
         
         #p_ii = np.divide(eye_mu,lam)
-        lam_eq_zero = lam[:, 1:day_for_tr] == 0
+        lam_eq_zero = lam[:, :day_for_tr] == 0
         mus = np.divide(mus,lam[:, :day_for_tr])
-        mus[lam_eq_zero.flatten()] =0
+        mus[lam_eq_zero] =0
         
         mus = np.sum(mus * covid_tr[:, :day_for_tr], axis=1) / day_for_tr
+        mus = mus.reshape(-1,1)
     
         #LINE 224
         # M-step Part 2)
@@ -572,3 +571,21 @@ def HawkPR(InputPath_report, InputPath_mobility, InputPath_demography, Delta, Al
     pred_cases = np.sum(sim_mean , axis=0)   
     plot_covid_predictions(DaysPred, n_day_tr, covid, pred_cases, DatesList=NYT_Date_list, compare=True)
     
+def main():
+    Alpha =0
+    Beta =0
+    EMitr = 20
+    Delta = 3
+    DaysPred=6
+    SimTimes=6
+    
+    OutputPath_pred = r"C:\Users\dipiy\OneDrive\Documents\GitHub\HawkPR\output\model_pred.csv";
+    OutputPath_mdl = r"C:\Users\dipiy\OneDrive\Documents\GitHub\HawkPR\output\mdl.mat";
+    InputPath_demography = r"C:\Users\dipiy\OneDrive\Documents\GitHub\HawkPR\input_data\Demo_Dconfirmed.csv";
+    InputPath_report = r"C:\Users\dipiy\OneDrive\Documents\GitHub\HawkPR\input_data\NYT_Dconfirmed.csv";
+    InputPath_mobility = r"C:\Users\dipiy\OneDrive\Documents\GitHub\HawkPR\input_data\GoogleMobi_Dconfirmed.csv";
+    
+    HawkPR(InputPath_report, InputPath_mobility, InputPath_demography, Delta, Alpha, Beta, EMitr, DaysPred, SimTimes, OutputPath_mdl, OutputPath_pred)
+    
+    
+main()
