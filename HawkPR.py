@@ -119,7 +119,7 @@ def plot_covid_predictions(DaysPred, n_day_tr, covid_og, pred_cases, DatesList, 
         raise ValueError(f"DatesList should have {n_day_tr +DaysPred} entries, but got {len(DatesList)} entries.")
     
     # Sum cases along axis=0 to get daily cases across all counties
-    daily_cases = np.cumsum(covid_og.sum(axis=0))
+    daily_cases = np.sum(covid_og, axis=0)
     
     # Plot the data
     plt.figure(figsize=(10, 6))
@@ -130,9 +130,9 @@ def plot_covid_predictions(DaysPred, n_day_tr, covid_og, pred_cases, DatesList, 
     # If compare is True, highlight the last DaysPred days and plot predicted cases
     if compare:
         plt.plot(DatesList[-DaysPred:], daily_cases[-DaysPred:], label="True Cases", color="green")
-        plt.plot(DatesList[-DaysPred:], np.cumsum(pred_cases), label="Predicted Cases", color="red")
+        plt.plot(DatesList[-DaysPred:], pred_cases, label="Predicted Cases", color="red")
     else: 
-        plt.plot(DatesList[-DaysPred:], np.cumsum(pred_cases), label="Predicted Cases", color="red")        
+        plt.plot(DatesList[-DaysPred:], pred_cases, label="Predicted Cases", color="red")        
     
     # Labeling the graph
     plt.xlabel("Time")
