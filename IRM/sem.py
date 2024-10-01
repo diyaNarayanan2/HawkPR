@@ -68,16 +68,6 @@ class ChainEquationModel(object):
             y = x @ self.wxy + h @ self.why + torch.randn(n, self.dim)
             z = y @ self.wyz + h @ self.whz + torch.randn(n, self.dim) * env
 
-        return torch.cat((x, z), 1) @ self.scramble, y.sum(1, keepdim=True)
-
-
-class EventSampler(ChainEquationModel):
-    def __init__(self, dim, ones=True, scramble=False, hetero=True, hidden=False):
-        super().__init__(
-            self, dim, ones=True, scramble=False, hetero=True, hidden=False
+        return torch.cat((x, z), 1) @ self.scramble, torch.poisson(
+            torch.exp(y.sum(1, keepdim=True))
         )
-
-    def __call__(self, n, env):
-        self.cov, self.lam_dep = ChainEquationModel(self, n, env)
-        dep = torch.poisson(self.lam_dep)
-        return self.cov, dep

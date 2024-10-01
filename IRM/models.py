@@ -60,7 +60,7 @@ class InvariantRiskMinimization(object):
         self.w.requires_grad = True
 
         opt = torch.optim.Adam([self.phi], lr=args["lr"])
-        loss = torch.poisson_nll_loss()
+        loss = torch.nn.PoissonNLLLoss()
         # loss = torch.nn.MSELoss()
         # change this loss function and optimization function to be for poisson regression instead of linear
 
@@ -175,7 +175,7 @@ class EmpiricalRiskMinimizer(object):
         y_all = torch.cat([y for (x, y) in environments]).numpy()
 
         # w = LinearRegression(fit_intercept=False).fit(x_all, y_all).coef_
-        model = sm.fitglm(y_all, x_all, family=sm.families.Poisson())
+        model = sm.GLM(y_all, x_all, family=sm.families.Poisson())
         res = model.fit()
         w = res.params
         self.w = torch.Tensor(w).view(-1, 1)
