@@ -60,7 +60,8 @@ class InvariantRiskMinimization(object):
         self.w.requires_grad = True
 
         opt = torch.optim.Adam([self.phi], lr=args["lr"])
-        loss = torch.nn.MSELoss()
+        loss = torch.poisson_nll_loss()
+        # loss = torch.nn.MSELoss()
         # change this loss function and optimization function to be for poisson regression instead of linear
 
         for iteration in range(args["n_iterations"]):
