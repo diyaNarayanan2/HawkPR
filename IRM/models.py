@@ -10,6 +10,7 @@ import torch
 import math
 
 from sklearn.linear_model import LinearRegression
+import statsmodels.api as sm
 from itertools import chain, combinations
 from scipy.stats import f as fdist
 from scipy.stats import ttest_ind
@@ -167,10 +168,15 @@ class InvariantCausalPrediction(object):
 
 class EmpiricalRiskMinimizer(object):
     def __init__(self, environments, args):
+        # x is the covariates matrix
+        # y is the depedent variable
         x_all = torch.cat([x for (x, y) in environments]).numpy()
         y_all = torch.cat([y for (x, y) in environments]).numpy()
 
-        w = LinearRegression(fit_intercept=False).fit(x_all, y_all).coef_
+        # w = LinearRegression(fit_intercept=False).fit(x_all, y_all).coef_
+        model = sm.fitglm(y_all, x_all, family=sm.families.Poisson())
+        res = model.fit()
+        w = res.params
         self.w = torch.Tensor(w).view(-1, 1)
 
     def solution(self):
