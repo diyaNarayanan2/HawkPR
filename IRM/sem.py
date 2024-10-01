@@ -3,7 +3,24 @@
 #
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
-#
+
+"""Class that creates a equation model 
+
+ h           h           h
+ |           |           |
+|z| <(wyz)- |y| <(wxy)- |x|
+             |           |
+             N (e)       N (e)
+             
+dim: dimension of the model
+ones: if True, weight matrices are identity 
+scramble : If True, multiples output with a orthonormal matrix to scramble it
+hetero: If True, noise has different variancein all variables x,y,z. Else same 
+noise is N()
+hidden: specifies wether or  not to include hidden contributors to x and y. 
+
+
+"""
 
 import torch
 
@@ -35,6 +52,7 @@ class ChainEquationModel(object):
             self.why = torch.zeros(self.dim, self.dim)
             self.whz = torch.zeros(self.dim, self.dim)
 
+    # returns amalgamate of weight matrix of x on y (which is the true soln), and scramble marix
     def solution(self):
         w = torch.cat((self.wxy.sum(1), torch.zeros(self.dim))).view(-1, 1)
         return w, self.scramble
@@ -51,3 +69,15 @@ class ChainEquationModel(object):
             z = y @ self.wyz + h @ self.whz + torch.randn(n, self.dim) * env
 
         return torch.cat((x, z), 1) @ self.scramble, y.sum(1, keepdim=True)
+
+
+class EventSampler(ChainEquationModel):
+    def __init__(self, dim, ones=True, scramble=False, hetero=True, hidden=False):
+        super().__init__(
+            self, dim, ones=True, scramble=False, hetero=True, hidden=False
+        )
+
+    def __call__(self, n, env):
+        self.cov, self.lam_dep = ChainEquationModel(self, n, env)
+        dep = torch.poisson(self.lam_dep)
+        return self.cov, dep

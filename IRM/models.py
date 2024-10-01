@@ -27,6 +27,9 @@ def pretty(vector):
     return "[" + ", ".join("{:+.4f}".format(vi) for vi in vlist) + "]"
 
 
+# For each method, training and compilation of results is done upon initilization, only solution is returned on solution fucntion call
+
+
 class InvariantRiskMinimization(object):
     def __init__(self, environments, args):
         best_reg = 0
@@ -40,8 +43,7 @@ class InvariantRiskMinimization(object):
             err = (x_val @ self.solution() - y_val).pow(2).mean().item()
 
             if args["verbose"]:
-                print("IRM (reg={:.3f}) has {:.3f} validation error.".format(
-                    reg, err))
+                print("IRM (reg={:.3f}) has {:.3f} validation error.".format(reg, err))
 
             if err < best_err:
                 best_err = err
@@ -58,27 +60,28 @@ class InvariantRiskMinimization(object):
 
         opt = torch.optim.Adam([self.phi], lr=args["lr"])
         loss = torch.nn.MSELoss()
+        # change this loss function and optimization function to be for poisson regression instead of linear
 
         for iteration in range(args["n_iterations"]):
             penalty = 0
             error = 0
             for x_e, y_e in environments:
                 error_e = loss(x_e @ self.phi @ self.w, y_e)
-                penalty += grad(error_e, self.w,
-                                create_graph=True)[0].pow(2).mean()
+                penalty += grad(error_e, self.w, create_graph=True)[0].pow(2).mean()
                 error += error_e
 
             opt.zero_grad()
+            # maybe optimizer should have grad
             (reg * error + (1 - reg) * penalty).backward()
             opt.step()
 
             if args["verbose"] and iteration % 1000 == 0:
                 w_str = pretty(self.solution())
-                print("{:05d} | {:.5f} | {:.5f} | {:.5f} | {}".format(iteration,
-                                                                      reg,
-                                                                      error,
-                                                                      penalty,
-                                                                      w_str))
+                print(
+                    "{:05d} | {:.5f} | {:.5f} | {:.5f} | {}".format(
+                        iteration, reg, error, penalty, w_str
+                    )
+                )
 
     def solution(self):
         return (self.phi @ self.w).view(-1, 1)
@@ -147,9 +150,9 @@ class InvariantCausalPrediction(object):
 
     def mean_var_test(self, x, y):
         pvalue_mean = ttest_ind(x, y, equal_var=False).pvalue
-        pvalue_var1 = 1 - fdist.cdf(np.var(x, ddof=1) / np.var(y, ddof=1),
-                                    x.shape[0] - 1,
-                                    y.shape[0] - 1)
+        pvalue_var1 = 1 - fdist.cdf(
+            np.var(x, ddof=1) / np.var(y, ddof=1), x.shape[0] - 1, y.shape[0] - 1
+        )
 
         pvalue_var2 = 2 * min(pvalue_var1, 1 - pvalue_var1)
 
