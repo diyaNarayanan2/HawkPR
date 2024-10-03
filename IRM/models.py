@@ -18,6 +18,7 @@ from scipy.stats import ttest_ind
 from torch.autograd import grad
 
 import scipy.optimize
+from sklearn.linear_model import PoissonRegressor
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -50,17 +51,18 @@ class InvariantRiskMinimization(object):
                 best_err = err
                 best_reg = reg
                 best_phi = self.phi.clone()
-        self.phi = best_phi
+        # self.phi = best_phi
 
     def train(self, environments, args, reg=0):
         dim_x = environments[0][0].size(1)
 
         self.phi = torch.nn.Parameter(torch.eye(dim_x, dim_x))
+        # self.w = poisson sampling layer, that samples one output from each
         self.w = torch.ones(dim_x, 1)
         self.w.requires_grad = True
 
         opt = torch.optim.Adam([self.phi], lr=args["lr"])
-        loss = torch.nn.PoissonNLLLoss()
+        loss = torch.nn.PoissonNLLLoss(log_input=True)
         # loss = torch.nn.MSELoss()
         # change this loss function and optimization function to be for poisson regression instead of linear
 
@@ -68,7 +70,7 @@ class InvariantRiskMinimization(object):
             penalty = 0
             error = 0
             for x_e, y_e in environments:
-                error_e = loss(x_e @ self.phi @ self.w, y_e)
+                error_e = loss((x_e @ self.phi @ self.w), y_e)
                 penalty += grad(error_e, self.w, create_graph=True)[0].pow(2).mean()
                 error += error_e
 
@@ -77,7 +79,7 @@ class InvariantRiskMinimization(object):
             (reg * error + (1 - reg) * penalty).backward()
             opt.step()
 
-            if args["verbose"] and iteration % 1000 == 0:
+            if args["verbose"] and iteration % 100 == 0:
                 w_str = pretty(self.solution())
                 print(
                     "{:05d} | {:.5f} | {:.5f} | {:.5f} | {}".format(
@@ -175,9 +177,9 @@ class EmpiricalRiskMinimizer(object):
         y_all = torch.cat([y for (x, y) in environments]).numpy()
 
         # w = LinearRegression(fit_intercept=False).fit(x_all, y_all).coef_
-        model = sm.GLM(y_all, x_all, family=sm.families.Poisson())
-        res = model.fit()
-        w = res.params
+        model = PoissonRegressor(max_iter=100, verbose=0)
+        model.fit(x_all, y_all.ravel())
+        w = model.coef_
         self.w = torch.Tensor(w).view(-1, 1)
 
     def solution(self):

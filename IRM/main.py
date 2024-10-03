@@ -24,6 +24,7 @@ def errors(w, w_hat):
     w = w.view(-1)
     w_hat = w_hat.view(-1)
 
+    # declares indices of causal and non_causal elements from the true soln
     i_causal = torch.where(w != 0)[0].view(-1)
     i_noncausal = torch.where(w == 0)[0].view(-1)
 
@@ -39,6 +40,7 @@ def errors(w, w_hat):
     else:
         error_noncausal = 0
 
+    # calculates MSE seperately for both sets of elements and returns
     return error_causal, error_noncausal
 
 
@@ -94,10 +96,12 @@ def run_experiment(args):
 
         all_sems.append(sem)
         all_environments.append(environments)
+        # environemnts stores the data with y poisson sampled
 
     # zip function jointly iterates values from sems and envs
     for sem, environments in zip(all_sems, all_environments):
         sem_solution, sem_scramble = sem.solution()
+        # keeping sem-solution as the true weight of y on x
 
         solutions = [
             "{} SEM {} {:.5f} {:.5f}".format(setup_str, pretty(sem_solution), 0, 0)
@@ -125,14 +129,16 @@ def run_experiment(args):
         all_solutions += solutions
 
     return all_solutions
+    # each solution has the form:
+    # "POS IRM [+0.112 -1.270] 0.011 0.233"
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Invariant regression")
     # Dimension of x,y,z - square matrices of data
-    parser.add_argument("--dim", type=int, default=10)
+    parser.add_argument("--dim", type=int, default=4)
     # No. of Samples: n in sem call
-    parser.add_argument("--n_samples", type=int, default=1000)
+    parser.add_argument("--n_samples", type=int, default=10)
 
     parser.add_argument("--n_reps", type=int, default=10)
     parser.add_argument("--skip_reps", type=int, default=0)
@@ -140,16 +146,16 @@ if __name__ == "__main__":
     parser.add_argument("--print_vectors", type=int, default=1)
 
     # Training iterations
-    parser.add_argument("--n_iterations", type=int, default=100000)
+    parser.add_argument("--n_iterations", type=int, default=1000)
 
     # Train process learning rate
     parser.add_argument("--lr", type=float, default=1e-3)
 
     # Verbose
-    parser.add_argument("--verbose", type=int, default=0)
+    parser.add_argument("--verbose", type=int, default=1)
 
     # Methods to test
-    parser.add_argument("--methods", type=str, default="ERM,ICP,IRM")
+    parser.add_argument("--methods", type=str, default="ERM,IRM")
     parser.add_argument("--alpha", type=float, default=0.05)
     parser.add_argument("--env_list", type=str, default=".2,2.,5.")
     # default only 3 envs
@@ -157,10 +163,17 @@ if __name__ == "__main__":
     # CHAIN EQ MODEL- ARGS for Setup
     parser.add_argument("--setup_sem", type=str, default="chain")
     parser.add_argument("--setup_ones", type=int, default=1)
-    parser.add_argument("--setup_hidden", type=int, default=0)
-    parser.add_argument("--setup_hetero", type=int, default=0)
-    parser.add_argument("--setup_scramble", type=int, default=0)
+    parser.add_argument("--setup_hidden", type=int, default=1)
+    parser.add_argument("--setup_hetero", type=int, default=1)
+    parser.add_argument("--setup_scramble", type=int, default=1)
     args = dict(vars(parser.parse_args()))
 
     all_solutions = run_experiment(args)
     print("\n".join(all_solutions))
+    # Open the file in write mode ('w')
+    with open("synthetic_results.txt", "a") as f:
+        # Write the content to the file
+        f.write("\n".join(all_solutions))
+
+    # Optionally, print confirmation that the file has been written
+    print("Results have been written to synthetic_results.txt")

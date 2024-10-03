@@ -72,23 +72,24 @@ def plot_bars(results, category, which, sep=1.1):
 
         for m, model in enumerate(models):
             boxes.append(np.array(results[setup][model])[:, idx])
-            boxes_means.append(
-                np.mean(np.array(results[setup][model])[:, idx]))
+            boxes_means.append(np.mean(np.array(results[setup][model])[:, idx]))
             boxes_vars.append(np.std(np.array(results[setup][model])[:, idx]))
             boxes_colors.append("C" + str(m))
 
-        plt.bar([0, 1, 2],
-                boxes_means,
-                yerr=np.array(boxes_vars),
-                color=boxes_colors,
-                hatch=hatch,
-                alpha=0.7,
-                log=True)
+        plt.bar(
+            [0, 1],
+            boxes_means,
+            yerr=np.array(boxes_vars),
+            color=boxes_colors,
+            hatch=hatch,
+            alpha=0.7,
+            log=True,
+        )
 
         if which == "causal":
             plt.xticks([1], [title])
         else:
-            ax.xaxis.set_ticks_position('top')
+            ax.xaxis.set_ticks_position("top")
             plt.xticks([1], [""])
 
         if (counter + offset) == 2 or (counter + offset) == 6:
@@ -100,8 +101,7 @@ def plot_bars(results, category, which, sep=1.1):
         if title == "PES" and which != "causal":
             legends = []
             for m, model in enumerate(models):
-                legends.append(
-                    Patch(facecolor="C" + str(m), alpha=0.7, label=model))
+                legends.append(Patch(facecolor="C" + str(m), alpha=0.7, label=model))
             plt.legend(handles=legends, loc="lower center")
 
         if title == "POU" and which != "causal":
@@ -111,8 +111,8 @@ def plot_bars(results, category, which, sep=1.1):
 
 def plot_experiment(all_solutions, category, fname):
     plt.rcParams["font.family"] = "serif"
-    plt.rc('text', usetex=True)
-    plt.rc('font', size=10)
+    # plt.rc("text", usetex=True)
+    plt.rc("font", size=10)
 
     results = {}
 
@@ -134,12 +134,13 @@ def plot_experiment(all_solutions, category, fname):
     plt.figure(figsize=(7, 2))
     plot_bars(results, category, "causal")
     plot_bars(results, category, "noncausal")
-    plt.tight_layout(0, 0, 0.5)
+    plt.tight_layout()
+    plt.show()
 
-    if fname is None:
-        plt.show()
-    else:
-        plt.savefig(fname)
+    # if fname is None:
+    # plt.show()
+    # else:
+    #   plt.savefig(fname)
 
 
 if __name__ == "__main__":
