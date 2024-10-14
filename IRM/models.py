@@ -19,6 +19,8 @@ from torch.autograd import grad
 
 import scipy.optimize
 from sklearn.linear_model import PoissonRegressor
+from sklearn.preprocessing import StandardScaler
+import statsmodels.api as sm
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -175,12 +177,22 @@ class EmpiricalRiskMinimizer(object):
         # y is the depedent variable
         x_all = torch.cat([x for (x, y) in environments]).numpy()
         y_all = torch.cat([y for (x, y) in environments]).numpy()
+        print(np.isnan(x_all).sum())
+        print(np.isinf(x_all).sum())
+        print(np.isnan(y_all).sum())
+        print(np.isinf(y_all).sum())
 
         # w = LinearRegression(fit_intercept=False).fit(x_all, y_all).coef_
-        model = PoissonRegressor(max_iter=100, verbose=0)
-        model.fit(x_all, y_all.ravel())
-        w = model.coef_
-        self.w = torch.Tensor(w).view(-1, 1)
+        scaler_x = StandardScaler()
+        scaler_y = StandardScaler()
+        x_all_scaled = scaler_x.fit_transform(x_all)
+        y_all_scaled = scaler_y.fit_transform(y_all.reshape(-1, 1))
+        model = sm.GLM(y_all_scaled, x_all_scaled, family=sm.families.Poisson())
+        res = model.fit(maxiter=500)
+        print(res.summary())
+        w_scaled = res.params
+        w_original = w_scaled / scaler_x.scale_
+        self.w = torch.Tensor(w_original).view(-1, 1)
 
     def solution(self):
         return self.w
