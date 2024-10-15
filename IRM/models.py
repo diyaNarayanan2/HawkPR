@@ -7,6 +7,7 @@
 
 import numpy as np
 import torch
+import torch.nn as nn
 import math
 
 from sklearn.linear_model import LinearRegression
@@ -58,12 +59,16 @@ class InvariantRiskMinimization(object):
     def train(self, environments, args, reg=0):
         dim_x = environments[0][0].size(1)
 
-        self.phi = torch.nn.Parameter(torch.eye(dim_x, dim_x))
-        # self.w = poisson sampling layer, that samples one output from each
-        self.w = torch.ones(dim_x, 1)
+        # Initialize phi as a parameter with Xavier initialization
+        self.phi = nn.Parameter(torch.empty(dim_x, dim_x))
+        nn.init.xavier_uniform_(self.phi)
+
+        # Initialize weights with Xavier initialization
+        self.w = torch.empty(dim_x, 1)
+        nn.init.xavier_uniform_(self.w)
         self.w.requires_grad = True
 
-        opt = torch.optim.Adam([self.phi], lr=args["lr"])
+        opt = torch.optim.Adam([self.phi], lr=args["lr"], weight_decay=1e-5)
         loss = torch.nn.PoissonNLLLoss(log_input=True)
         # loss = torch.nn.MSELoss()
         # change this loss function and optimization function to be for poisson regression instead of linear
@@ -181,16 +186,17 @@ class EmpiricalRiskMinimizer(object):
         print(np.isinf(x_all).sum())
         print(np.isnan(y_all).sum())
         print(np.isinf(y_all).sum())
+        print(np.min(y_all))
+        print(np.min(x_all))
 
         # w = LinearRegression(fit_intercept=False).fit(x_all, y_all).coef_
         scaler_x = StandardScaler()
         scaler_y = StandardScaler()
         x_all_scaled = scaler_x.fit_transform(x_all)
         y_all_scaled = scaler_y.fit_transform(y_all.reshape(-1, 1))
-        model = sm.GLM(y_all_scaled, x_all_scaled, family=sm.families.Poisson())
-        res = model.fit(maxiter=500)
-        print(res.summary())
-        w_scaled = res.params
+        model = PoissonRegressor(max_iter=100, verbose=0)
+        model.fit(x_all, y_all.ravel())
+        w_scaled = model.coef_
         w_original = w_scaled / scaler_x.scale_
         self.w = torch.Tensor(w_original).view(-1, 1)
 

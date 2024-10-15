@@ -69,5 +69,5 @@ class ChainEquationModel(object):
             z = y @ self.wyz + h @ self.whz + torch.randn(n, self.dim) * env
 
         return torch.cat((x, z), 1) @ self.scramble, torch.poisson(
-            torch.exp(y.sum(1, keepdim=True))
+            torch.exp(y.mean(1, keepdim=True))
         )
